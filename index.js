@@ -1,6 +1,7 @@
 import { POS_HTML } from "./pos.html.js";
 import { MENU_HTML } from "./menu.html.js";
 import { ADMIN_HTML } from "./admin.html.js";
+import { LANDING_HTML } from "./landing.html.js";
 
 const TAX_RATE = 0.0;
 const LOYALTY_RATE = 0.10;
@@ -90,13 +91,25 @@ async function handleCreateOrder(request, env) {
     }
   }
 
+  const dayCount = await env.DB.prepare(
+    "SELECT COUNT(*) as n FROM orders WHERE date(created_at) = date('now')"
+  ).first();
+  const dailyNumber = (dayCount.n || 0) + 1;
+
+  let employeeName = null;
+  if (employee_id) {
+    const emp = await env.DB.prepare("SELECT name FROM employees WHERE id = ?").bind(employee_id).first();
+    employeeName = emp ? emp.name : null;
+  }
+
   const orderResult = await env.DB.prepare(
-    `INSERT INTO orders (customer_id, channel, payment_method, employee_id, subtotal, tax, total)
-     VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`
-  ).bind(customerId, channel, payment_method || "unspecified", employee_id || null, subtotal, tax, total).first();
+    `INSERT INTO orders (customer_id, channel, payment_method, employee_id, subtotal, tax, total, daily_number)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at`
+  ).bind(customerId, channel, payment_method || "unspecified", employee_id || null, subtotal, tax, total, dailyNumber).first();
 
   const orderId = orderResult.id;
   const statements = [];
+  const receiptItems = [];
   for (const item of items) {
     const p = productMap[item.product_id];
     statements.push(env.DB.prepare(
@@ -104,10 +117,19 @@ async function handleCreateOrder(request, env) {
     ).bind(orderId, item.product_id, item.quantity, p.price, item.notes || null));
     const neededGrams = (p.grams_per_unit || 0) * item.quantity;
     statements.push(env.DB.prepare("UPDATE products SET stock_grams = stock_grams - ? WHERE id = ?").bind(neededGrams, p.id));
+    receiptItems.push({ name: p.name, quantity: item.quantity, unit_price: p.price, line_total: p.price * item.quantity });
   }
   await env.DB.batch(statements);
 
-  return json({ order_id: orderId, subtotal, tax, total, customer_id: customerId }, 201);
+  return json({
+    order_id: orderId,
+    daily_number: dailyNumber,
+    subtotal, tax, total,
+    customer_id: customerId,
+    employee_name: employeeName,
+    created_at: orderResult.created_at,
+    items: receiptItems,
+  }, 201);
 }
 
 async function handleGetMyOrders(env, url) {
@@ -115,7 +137,7 @@ async function handleGetMyOrders(env, url) {
   const date = url.searchParams.get("date") || todayDate();
   if (!employeeId) return json({ error: "employee_id is required" }, 400);
   const { results } = await env.DB.prepare(
-    `SELECT o.id, o.subtotal, o.tax, o.total, o.payment_method, o.created_at
+    `SELECT o.id, o.daily_number, o.subtotal, o.tax, o.total, o.payment_method, o.created_at
      FROM orders o WHERE o.employee_id = ? AND date(o.created_at) = ? ORDER BY o.created_at DESC`
   ).bind(employeeId, date).all();
   return json(results);
@@ -152,7 +174,7 @@ async function handleAdminOrders(request, env, url) {
   if (denied) return denied;
   const date = url.searchParams.get("date") || todayDate();
   const { results } = await env.DB.prepare(
-    `SELECT o.id, o.total, o.payment_method, o.channel, o.created_at, COALESCE(e.name,'Unassigned') as employee_name
+    `SELECT o.id, o.daily_number, o.total, o.payment_method, o.channel, o.created_at, COALESCE(e.name,'Unassigned') as employee_name
      FROM orders o LEFT JOIN employees e ON e.id = o.employee_id
      WHERE date(o.created_at) = ? ORDER BY o.created_at DESC`
   ).bind(date).all();
@@ -243,7 +265,8 @@ export default {
     }
 
     try {
-      if (pathname === "/" && request.method === "GET") return html(POS_HTML);
+      if (pathname === "/" && request.method === "GET") return html(LANDING_HTML);
+      if (pathname === "/pos" && request.method === "GET") return html(POS_HTML);
       if (pathname === "/menu" && request.method === "GET") return html(MENU_HTML);
       if (pathname === "/admin" && request.method === "GET") return html(ADMIN_HTML);
 

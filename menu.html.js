@@ -6,28 +6,36 @@ export const MENU_HTML = `<!DOCTYPE html>
 <title>Kafa!n and Co — Order online</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f4f1ea; color: #2c2420; }
-  header { background: #2c2420; color: #f4f1ea; padding: 20px 24px; text-align: center; }
+  body {
+    font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; color: #f4f1ea; min-height: 100vh;
+    background-color: #1c1410;
+    background-image: linear-gradient(180deg, rgba(20,14,9,0.78), rgba(20,14,9,0.90)), url('https://raw.githubusercontent.com/Aligele/kafain-pos/main/cafe-bg.jpg');
+    background-size: cover; background-position: center; background-attachment: fixed;
+  }
+  a { color: #d8b26a; }
+  header { padding: 20px 24px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.08); }
   header h1 { margin: 0; font-size: 20px; }
+  .backlink { font-size: 12px; opacity: 0.8; display: block; margin-top: 4px; }
   .wrap { max-width: 480px; margin: 0 auto; padding: 16px; }
-  .item { background: #fff; border: 1px solid #e5ded2; border-radius: 10px; padding: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .glass { background: rgba(30,22,16,0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.10); }
+  .item { border-radius: 10px; padding: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .item .name { font-weight: 600; font-size: 14px; }
-  .item .price { color: #8a6d3b; font-size: 13px; margin-top: 2px; }
-  .item button { padding: 8px 14px; border-radius: 8px; border: 1px solid #2c2420; background: #fff; cursor: pointer; }
-  .bar { position: sticky; bottom: 0; background: #fff; border-top: 1px solid #e5ded2; padding: 14px 16px; margin-top: 12px; border-radius: 10px 10px 0 0; }
+  .item .price { color: #d8b26a; font-size: 13px; margin-top: 2px; }
+  .item button { padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); color: #f4f1ea; cursor: pointer; }
+  .bar { position: sticky; bottom: 0; padding: 14px 16px; margin-top: 12px; border-radius: 10px 10px 0 0; }
   .bar .row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
-  input, button.primary { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #d8cfc0; font-size: 14px; margin-top: 8px; }
-  button.primary { background: #2c2420; color: #f4f1ea; border: none; cursor: pointer; }
+  input, button.primary { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); font-size: 14px; margin-top: 8px; background: rgba(255,255,255,0.06); color: #f4f1ea; }
+  button.primary { background: #d8b26a; color: #241a10; border: none; cursor: pointer; font-weight: 600; }
   .msg { font-size: 13px; margin-top: 8px; padding: 8px; border-radius: 6px; }
-  .msg.ok { background: #e6f1e6; color: #2f6f2f; }
-  .msg.err { background: #fbe6e6; color: #a33; }
+  .msg.ok { background: rgba(70,150,90,0.25); color: #b6e6c2; }
+  .msg.err { background: rgba(180,60,60,0.25); color: #f3b8b8; }
 </style>
 </head>
 <body>
-<header><h1>Kafa!n and Co</h1></header>
+<header><h1>Kafa!n and Co</h1><a class="backlink" href="/">← Home</a></header>
 <div class="wrap">
   <div id="items"></div>
-  <div class="bar">
+  <div class="bar glass">
     <div class="row"><span>Items in cart</span><span id="count">0</span></div>
     <div class="row"><span>Total</span><span id="total">$0.00</span></div>
     <input type="email" id="email" placeholder="Email for order + loyalty points" />
@@ -48,7 +56,7 @@ async function loadProducts() {
 function render() {
   const el = document.getElementById('items');
   el.innerHTML = products.map(p => \`
-    <div class="item">
+    <div class="item glass">
       <div>
         <div class="name">\${p.name}</div>
         <div class="price">$\${p.price.toFixed(2)}</div>

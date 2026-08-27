@@ -6,38 +6,71 @@ export const POS_HTML = `<!DOCTYPE html>
 <title>Kafa!n and Co — POS</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f4f1ea; color: #2c2420; }
-  header { background: #2c2420; color: #f4f1ea; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  body {
+    font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+    margin: 0;
+    color: #f4f1ea;
+    min-height: 100vh;
+    background-color: #1c1410;
+    background-image:
+      linear-gradient(180deg, rgba(20,14,9,0.78), rgba(20,14,9,0.90)),
+      url('https://raw.githubusercontent.com/Aligele/kafain-pos/main/cafe-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+  a { color: #d8b26a; }
+  header { padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
   header h1 { margin: 0; font-size: 18px; font-weight: 600; }
   header .whoami { display: flex; align-items: center; gap: 8px; font-size: 13px; }
   header select { padding: 6px 10px; border-radius: 6px; border: none; }
   .wrap { display: flex; gap: 16px; padding: 16px; max-width: 1100px; margin: 0 auto; flex-wrap: wrap; }
   .products { flex: 2; min-width: 280px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; align-content: start; }
-  .card { background: #fff; border-radius: 10px; padding: 14px; cursor: pointer; border: 1px solid #e5ded2; transition: box-shadow .15s; }
-  .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .glass { background: rgba(30,22,16,0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.10); }
+  .card { border-radius: 10px; padding: 14px; cursor: pointer; transition: transform .12s, background .12s; }
+  .card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.10); }
   .card .name { font-weight: 600; font-size: 14px; }
-  .card .price { color: #8a6d3b; font-size: 13px; margin-top: 4px; }
-  .card .stock { color: #999; font-size: 11px; margin-top: 4px; }
-  .cart { flex: 1; background: #fff; border-radius: 10px; padding: 16px; border: 1px solid #e5ded2; min-width: 260px; height: fit-content; }
+  .card .price { color: #d8b26a; font-size: 13px; margin-top: 4px; }
+  .card .stock { color: #b8ab98; font-size: 11px; margin-top: 4px; }
+  .cart { flex: 1; border-radius: 10px; padding: 16px; min-width: 260px; height: fit-content; }
   .cart h2 { font-size: 15px; margin: 0 0 12px; }
-  .line { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #f0ece2; }
+  .line { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
   .totals { margin-top: 12px; font-size: 14px; }
   .totals .row { display: flex; justify-content: space-between; margin-top: 4px; }
   .totals .grand { font-weight: 700; font-size: 16px; margin-top: 8px; }
-  select, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 8px; border: 1px solid #d8cfc0; font-size: 14px; }
-  button.primary { background: #2c2420; color: #f4f1ea; border: none; cursor: pointer; }
-  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  select, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); font-size: 14px; background: rgba(255,255,255,0.06); color: #f4f1ea; }
+  button.primary { background: #d8b26a; color: #241a10; border: none; cursor: pointer; font-weight: 600; }
+  button.primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.secondary { background: rgba(255,255,255,0.06); color: #f4f1ea; cursor: pointer; }
   .msg { font-size: 13px; margin-top: 8px; padding: 8px; border-radius: 6px; }
-  .msg.ok { background: #e6f1e6; color: #2f6f2f; }
-  .msg.err { background: #fbe6e6; color: #a33; }
+  .msg.ok { background: rgba(70,150,90,0.25); color: #b6e6c2; }
+  .msg.err { background: rgba(180,60,60,0.25); color: #f3b8b8; }
   .mytickets { max-width: 1100px; margin: 0 auto; padding: 0 16px 24px; }
   .mytickets h3 { font-size: 14px; }
-  .ticket { background: #fff; border: 1px solid #e5ded2; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+  .ticket { border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+  .backlink { font-size: 12px; opacity: 0.8; }
+
+  #receiptOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:50; align-items:center; justify-content:center; }
+  #receipt { background:#fff; color:#111; width:300px; padding:20px; border-radius:6px; font-family: 'Courier New', monospace; font-size:13px; }
+  #receipt h2 { text-align:center; margin:0 0 4px; font-size:16px; }
+  #receipt .center { text-align:center; }
+  #receipt table { width:100%; border-collapse:collapse; margin:10px 0; }
+  #receipt td { padding:2px 0; font-size:12px; }
+  #receipt hr { border:none; border-top:1px dashed #999; margin:8px 0; }
+  #receiptActions { display:flex; gap:8px; margin-top:14px; }
+  #receiptActions button { width:auto; flex:1; padding:8px; }
+  @media print {
+    body * { visibility: hidden; }
+    #receipt, #receipt * { visibility: visible; }
+    #receipt { position: absolute; top: 0; left: 0; width: 280px; }
+    #receiptActions { display: none; }
+    #receiptOverlay { background: none; position: static; }
+  }
 </style>
 </head>
 <body>
 <header>
-  <h1>Kafa!n and Co — Counter POS</h1>
+  <h1>Kafa!n and Co — Counter POS <a class="backlink" href="/">· Home</a></h1>
   <div class="whoami">
     <span>Serving as</span>
     <select id="employee"></select>
@@ -45,7 +78,7 @@ export const POS_HTML = `<!DOCTYPE html>
 </header>
 <div class="wrap">
   <div class="products" id="products"></div>
-  <div class="cart">
+  <div class="cart glass">
     <h2>Current order</h2>
     <div id="lines"></div>
     <div class="totals">
@@ -64,6 +97,17 @@ export const POS_HTML = `<!DOCTYPE html>
   <h3>My tickets today</h3>
   <div id="myTickets"></div>
 </div>
+
+<div id="receiptOverlay">
+  <div>
+    <div id="receipt"></div>
+    <div id="receiptActions">
+      <button class="secondary" id="printBtn">🖨️ Print</button>
+      <button class="secondary" id="closeReceiptBtn">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let products = [];
 let employees = [];
@@ -93,7 +137,7 @@ async function loadProducts() {
 function renderProducts() {
   const el = document.getElementById('products');
   el.innerHTML = products.map(p => \`
-    <div class="card" data-id="\${p.id}">
+    <div class="card glass" data-id="\${p.id}">
       <div class="name">\${p.name}</div>
       <div class="price">$\${p.price.toFixed(2)}</div>
       <div class="stock">\${p.grams_per_unit ? Math.floor(p.stock_grams / p.grams_per_unit) + ' in stock' : ''}</div>
@@ -132,16 +176,44 @@ async function loadMyTickets() {
   const res = await fetch('/api/my-orders?employee_id=' + employeeId);
   const orders = await res.json();
   if (!Array.isArray(orders) || orders.length === 0) {
-    el.innerHTML = '<div style="font-size:13px;color:#999;">No tickets yet today.</div>';
+    el.innerHTML = '<div style="font-size:13px;color:#b8ab98;">No tickets yet today.</div>';
     return;
   }
   el.innerHTML = orders.map(o => \`
-    <div class="ticket">
-      <span>#\${o.id} · \${o.payment_method} · \${new Date(o.created_at).toLocaleTimeString()}</span>
+    <div class="ticket glass">
+      <span>#\${o.daily_number || o.id} · \${o.payment_method} · \${new Date(o.created_at).toLocaleTimeString()}</span>
       <span>$\${o.total.toFixed(2)}</span>
     </div>
   \`).join('');
 }
+
+function showReceipt(order) {
+  const empName = order.employee_name || document.querySelector('#employee option:checked')?.textContent || '';
+  const rows = order.items.map(it => \`
+    <tr><td>\${it.quantity}x \${it.name}</td><td style="text-align:right;">$\${it.line_total.toFixed(2)}</td></tr>
+  \`).join('');
+  document.getElementById('receipt').innerHTML = \`
+    <h2>KAFA!N AND CO</h2>
+    <div class="center">Order #\${order.daily_number}</div>
+    <div class="center">\${new Date(order.created_at).toLocaleString()}</div>
+    <div class="center">Served by: \${empName}</div>
+    <hr/>
+    <table>\${rows}</table>
+    <hr/>
+    <table>
+      <tr><td>Subtotal</td><td style="text-align:right;">$\${order.subtotal.toFixed(2)}</td></tr>
+      <tr><td>Tax</td><td style="text-align:right;">$\${order.tax.toFixed(2)}</td></tr>
+      <tr><td><b>Total</b></td><td style="text-align:right;"><b>$\${order.total.toFixed(2)}</b></td></tr>
+    </table>
+    <div class="center" style="margin-top:10px;">Thank you!</div>
+  \`;
+  document.getElementById('receiptOverlay').style.display = 'flex';
+}
+
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+document.getElementById('closeReceiptBtn').addEventListener('click', () => {
+  document.getElementById('receiptOverlay').style.display = 'none';
+});
 
 document.getElementById('checkout').addEventListener('click', async () => {
   const btn = document.getElementById('checkout');
@@ -162,8 +234,9 @@ document.getElementById('checkout').addEventListener('click', async () => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Order failed');
-    msg.textContent = 'Order #' + data.order_id + ' charged — $' + data.total.toFixed(2);
+    msg.textContent = 'Order #' + data.daily_number + ' charged — $' + data.total.toFixed(2);
     msg.className = 'msg ok';
+    showReceipt(data);
     cart = [];
     renderCart();
     loadProducts();
